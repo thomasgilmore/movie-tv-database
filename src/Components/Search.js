@@ -92,6 +92,7 @@ export class Search extends React.Component {
                 <input type="text" placeholder="Search Movies or TV Shows..." id="searchField"></input>
                 <button type="submit" onClick={this.searchDatabase}>Search</button>
               </form>
+              {items.length > 0 ? items[0].original_name  : ''}
             </div>
         //   <ul>
         //     {items.map(item => (
