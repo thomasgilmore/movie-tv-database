@@ -1,107 +1,83 @@
-import React from 'react';
+import React, { Component } from 'react';
+import MovieRow from './MovieRow';
+import $ from 'jquery';
 
-export class Search extends React.Component {
+export class Search extends Component {
+
     constructor(props) {
-      super(props);
-      this.state = {
-        error: null,
-        isLoaded: false,
-        items: [],
-        inputValue: ''
-      };
-      this.removeSpaces = (text) => {
-        return text.split(' ').filter(e => e.trim().length).join('%20');
-      };
-      this.fetchDatabase = () => {
-        let searchText = this.removeSpaces(this.inputValue);
-        console.log(searchText);
-        fetch("https://api.themoviedb.org/3/search/multi?api_key=526997861292b1a02c339135a7a20843&language=en-US&query=" + searchText + "&page=1&include_adult=false")
-          .then(res => res.json())
-          .then(
-          (result) => {
-            this.setState({
-              isLoaded: true,
-              items: result.results
-            });
+        super(props)
+        this.state = {}
+
+        this.performSearch()
+    }
+
+    performSearch(searchTerm) {
+        console.log("Perform search using moviedb")
+        const urlString = "https://api.themoviedb.org/3/search/movie?api_key=526997861292b1a02c339135a7a20843&query=" + searchTerm;
+        $.ajax({
+          url: urlString,
+          success: (searchResults) => {
+            console.log("Fetched data successfully")
+            console.log(searchResults)
+            const results = searchResults.results
+            // console.log(results[0])
+    
+            var movieRows = []
+    
+            results.forEach((movie) => {
+              movie.poster_src = "https://image.tmdb.org/t/p/w440_and_h660_face" + movie.poster_path;
+              console.log(movie.title)
+              const movieRow = <MovieRow key={movie.id} movie={movie} />
+              movieRows.push(movieRow)
+            })
+    
+            this.setState({rows: movieRows})
           },
-          // Note: it's important to handle errors here
-          // instead of a catch() block so that we don't swallow
-          // exceptions from actual bugs in components.
-          (error) => {
-            this.setState({
-              isLoaded: true,
-              error
-            });
+          error: (xhr, status, err) => {
+            console.log("Failed to fetch data")
           }
-        )
+        })
       }
-      this.searchDatabase = (e) => {
-        e.preventDefault();
-        this.inputValue = document.getElementById('searchField').value;
-        // console.log(this.inputValue);
-        // console.log(this.removeSpaces(this.inputValue));
-        document.getElementById('searchField').value = '';
-        this.fetchDatabase();
-        this.componentDidUpdate();
-    };
-    }
-
-    // componentDidMount() {
-      
-    // }
-
-    componentDidUpdate() {
-      console.log(this.state.items);
-    }
-  
-    // componentDidUpdate() {
-    //   let searchText = this.removeSpaces(this.inputValue);
-    //   console.log(searchText);
-    //   fetch("https://api.themoviedb.org/3/search/multi?api_key=526997861292b1a02c339135a7a20843&language=en-US&query=" + searchText + "&page=1&include_adult=false")
-    //     .then(res => res.json())
-    //     .then(
-    //       (result) => {
-    //         this.setState({
-    //           isLoaded: true,
-    //           items: result.results
-    //         });
-    //       },
-    //       // Note: it's important to handle errors here
-    //       // instead of a catch() block so that we don't swallow
-    //       // exceptions from actual bugs in components.
-    //       (error) => {
-    //         this.setState({
-    //           isLoaded: true,
-    //           error
-    //         });
-    //       }
-    //     )
-    // }
-  
-    render() {
-      const { error, isLoaded, items } = this.state;
-      console.log(items);
-      if (error) {
-        return <div>Error: {error.message}</div>;
-      // } else if (!isLoaded) {
-      //   return <div>Loading...</div>;
-      } else {
-        return (
-            <div>
-              <form id="form">
-                <input type="text" placeholder="Search Movies or TV Shows..." id="searchField"></input>
-                <button type="submit" onClick={this.searchDatabase}>Search</button>
-              </form>
-              {items.length > 0 ? items[0].original_name  : ''}
-            </div>
-        //   <ul>
-        //     {items.map(item => (
-        //       <li key={item.name}>
-        //         {item.name} {item.price}
-        //       </li>
-        //     ))}
-        //   </ul>
-        );
+    
+      searchChangeHandler(event) {
+        console.log(event.target.value);
+        const boundObject = this
+        const searchTerm = event.target.value;
+        boundObject.performSearch(searchTerm);
       }
-    }
-  }
+    
+      render() {
+      return (
+        <div>
+          
+          <table className="titleBar">
+            <tbody>
+              <tr>
+                <td>
+                  <img alt="app icon" width="50" src="https://www.themoviedb.org/assets/1/v4/logos/primary-green-d70eebe18a5eb5b166d5c1ef0796715b8d1a2cbc698f96d311d62f894ae87085.svg" />
+                </td>
+                <td width="8"></td>
+                <td>
+                  <h1>MovieDB Search</h1>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+    
+          <input style={{
+            fontSize: 24,
+            display: 'block',
+            width: '99%',
+            paddingTop: 8,
+            paddingBottom: 8,
+            paddingLeft: 16
+          }} onChange={this.searchChangeHandler.bind(this)} placeholder="Enter search term" />
+    
+          {this.state.rows}
+            
+    
+        </div>
+      );
+      }
+
+}
